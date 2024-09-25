@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medicine Search</title>
-    <a href="Hackathon.html">Go back</a>
+    <title>Medicine Search</title> 
+    <div>
+        <a style="text-align: left;" href="Hackathon.html">Go back</a>
+        <a style ="text-align: right;" href = "Cart.html">Move to cart</a>
+    </div>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -60,12 +63,45 @@
         tr:last-child td {
             border-bottom: none;
         }
+        button {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quantity span {
+            display: inline-block;
+            width: 60px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
         @media (max-width: 768px) {
             #search {
                 width: 90%;
             }
             th, td {
                 padding: 10px;
+            }
+            .quantity span {
+                width: 50px;
+                font-size: 16px;
             }
         }
     </style>
@@ -82,7 +118,7 @@
                 <th>Composition</th>
                 <th>Uses</th>
                 <th>Side Effects</th>
-                <th>Manufacturer</th>
+                <th>Quantity</th>
             </tr>
         </thead>
         <tbody>
@@ -92,6 +128,9 @@
     
 
     <script>
+        // Store the quantity of each medicine
+        const medicineQuantities = {};
+
         // Function to load CSV data and populate the table
         function loadCSVData() {
             fetch('Medicine_Details.csv') // Your CSV file
@@ -122,15 +161,64 @@
                             td.textContent = cols[3].trim(); // Side Effects
                             tr.appendChild(td);
 
+                            // Add quantity column with "Add 1" and "Delete 1" buttons
                             td = document.createElement('td');
-                            td.textContent = cols[5].trim(); // Manufacturer
+                            const div = document.createElement('div');
+                            div.className = 'quantity';
+
+                            // "Add 1" button
+                            const addBtn = document.createElement('button');
+                            addBtn.textContent = 'Add';
+                            addBtn.setAttribute('data-medicine', cols[0].trim());
+                            addBtn.onclick = incrementQuantity;
+                            div.appendChild(addBtn);
+
+                            // Quantity display
+                            const qtySpan = document.createElement('span');
+                            qtySpan.textContent = '0';
+                            div.appendChild(qtySpan);
+
+                            // "Delete 1" button
+                            const delBtn = document.createElement('button');
+                            delBtn.textContent = 'Delete';
+                            delBtn.className = 'delete-btn';
+                            delBtn.setAttribute('data-medicine', cols[0].trim());
+                            delBtn.onclick = decrementQuantity;
+                            div.appendChild(delBtn);
+
+                            td.appendChild(div);
                             tr.appendChild(td);
+
+                            // Store the initial quantity of 0
+                            medicineQuantities[cols[0].trim()] = 0;
 
                             tableBody.appendChild(tr);
                         }
                     });
                 })
                 .catch(error => console.error('Error loading CSV:', error));
+        }
+
+        // Function to increment quantity
+        function incrementQuantity(event) {
+            const medicineName = event.target.getAttribute('data-medicine');
+            const qtySpan = event.target.nextElementSibling;
+
+            // Increment quantity and update the span text
+            medicineQuantities[medicineName] += 1;
+            qtySpan.textContent = medicineQuantities[medicineName];
+        }
+
+        // Function to decrement quantity
+        function decrementQuantity(event) {
+            const medicineName = event.target.getAttribute('data-medicine');
+            const qtySpan = event.target.previousElementSibling;
+
+            // Decrement quantity and update the span text, ensuring it doesn't go below 0
+            if (medicineQuantities[medicineName] > 0) {
+                medicineQuantities[medicineName] -= 1;
+            }
+            qtySpan.textContent = medicineQuantities[medicineName];
         }
 
         // Function to search through the medicines
@@ -142,7 +230,7 @@
             for (let i = 1; i < rows.length; i++) { // Start from 1 to skip the table header
                 const cols = rows[i].getElementsByTagName('td');
                 let match = false;
-                for (let j = 0; j < cols.length; j++) {
+                for (let j = 0; j < cols.length - 1; j++) { // Exclude quantity column
                     const txtValue = cols[j].textContent || cols[j].innerText;
                     if (txtValue.toLowerCase().indexOf(input) > -1) {
                         match = true;
