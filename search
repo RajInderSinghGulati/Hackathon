@@ -1,1 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicine Search</title>
+    <a href="Hackathon.html">Go back</a>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f8fc;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #search {
+            display: block;
+            margin: 0 auto 20px auto;
+            padding: 12px 20px;
+            width: 60%;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+        #search:focus {
+            outline: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        td {
+            color: #333;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        @media (max-width: 768px) {
+            #search {
+                width: 90%;
+            }
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
 
+    <h1>Medicine List</h1>
+    <input type="text" id="search" placeholder="Search for medicines..." onkeyup="searchMedicines()">
+
+    <table id="medicine-table">
+        <thead>
+            <tr>
+                <th>Medicine Name</th>
+                <th>Composition</th>
+                <th>Uses</th>
+                <th>Side Effects</th>
+                <th>Manufacturer</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Medicine rows will be injected here -->
+        </tbody>
+    </table>
+    
+
+    <script>
+        // Function to load CSV data and populate the table
+        function loadCSVData() {
+            fetch('Medicine_Details.csv') // Your CSV file
+                .then(response => response.text())
+                .then(data => {
+                    const tableBody = document.querySelector('#medicine-table tbody');
+                    const rows = data.split('\n');
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header row
+                        const cols = row.split(',');
+                        if (cols.length >= 6) { // Ensure the first six columns exist
+                            const tr = document.createElement('tr');
+
+                            // Create table cells for each column
+                            let td = document.createElement('td');
+                            td.textContent = cols[0].trim(); // Medicine Name
+                            tr.appendChild(td);
+
+                            td = document.createElement('td');
+                            td.textContent = cols[1].trim(); // Composition
+                            tr.appendChild(td);
+
+                            td = document.createElement('td');
+                            td.textContent = cols[2].trim(); // Uses
+                            tr.appendChild(td);
+
+                            td = document.createElement('td');
+                            td.textContent = cols[3].trim(); // Side Effects
+                            tr.appendChild(td);
+
+                            td = document.createElement('td');
+                            td.textContent = cols[5].trim(); // Manufacturer
+                            tr.appendChild(td);
+
+                            tableBody.appendChild(tr);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading CSV:', error));
+        }
+
+        // Function to search through the medicines
+        function searchMedicines() {
+            const input = document.getElementById('search').value.toLowerCase();
+            const table = document.getElementById('medicine-table');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) { // Start from 1 to skip the table header
+                const cols = rows[i].getElementsByTagName('td');
+                let match = false;
+                for (let j = 0; j < cols.length; j++) {
+                    const txtValue = cols[j].textContent || cols[j].innerText;
+                    if (txtValue.toLowerCase().indexOf(input) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = match ? "" : "none";
+            }
+        }
+
+        // Load the CSV data when the page loads
+        window.onload = loadCSVData;
+    </script>
+
+</body>
+</html>
